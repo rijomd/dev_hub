@@ -4,6 +4,9 @@ import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './modules/auth/auth.module';
+import { ProjectsModule } from './modules/projects/projects.module';
+import { UserModule } from './modules/user/user.module';
 
 
 @Module({
@@ -22,6 +25,10 @@ import { AppService } from './app.service';
       autoLoadEntities: true,
       synchronize: true,
     }),
+
+    AuthModule,
+    ProjectsModule,
+    UserModule
   ],
   controllers: [AppController],
   providers: [AppService],
