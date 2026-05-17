@@ -1,29 +1,10 @@
-import { useNavigate } from '@tanstack/react-router';
+import { Header } from './Header';
 
 export function Dashboard() {
-  const navigate = useNavigate();
-  const userName = localStorage.getItem('user_name') || 'Developer';
-
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user_name');
-    navigate({ to: '/login' });
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b border-gray-100 px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-gray-900">Dev Hub</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-gray-600">Hi, <span className="font-semibold text-gray-900">{userName}</span></span>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1 rounded-md hover:bg-red-50 transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
+      <Header />
 
       <main className="max-w-7xl mx-auto py-12 px-6">
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
