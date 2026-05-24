@@ -9,3 +9,22 @@ export const CREATE_PROJECT_MUTATION = gql`
     }
   }
 `;
+
+export const GET_PROJECTS_QUERY = gql`
+  query GetProjects {
+    projects {
+      id
+      name
+      language
+      framework
+      port
+      status
+      envVersion
+      isLocal
+      localPath
+      gitUrl
+    }
+  }
+`;
+
+

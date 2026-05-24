@@ -1,14 +1,74 @@
+import { useQuery } from "@tanstack/react-query";
+import { client } from "../utils/gql-client";
+import { GET_PROJECTS_QUERY } from "./query";
 
 type Props = {
-    mockProjects: any[]
 }
 
-export const ProjectList = ({ mockProjects }: Props) => {
+export const ProjectList = ({ }: Props) => {
+    const { data, isPending } = useQuery({
+        queryKey: ['projects'],
+        queryFn: async () => await client.request(GET_PROJECTS_QUERY),
+    });
+
+    const getBorderColor = (status: string) => {
+        switch (status) {
+            case 'running':
+                return 'border-l-emerald-400';
+            case 'building':
+                return 'border-l-amber-400';
+            default:
+                return 'border-l-gray-500';
+        }
+    };
+
+    const getTagClass = (language: string) => {
+        switch (language?.toLowerCase()) {
+            case 'nodejs':
+                return 'bg-emerald-50 text-emerald-700';
+            case 'react':
+                return 'bg-indigo-50 text-indigo-700';
+            case 'python':
+                return 'bg-blue-50 text-blue-700';
+            case 'java':
+                return 'bg-orange-50 text-orange-700';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    if (isPending) {
+        return (
+            <div className="flex justify-center items-center py-24">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+                <span className="ml-3 text-gray-400 text-sm">Loading projects...</span>
+            </div>
+        );
+    }
+
+    const rawProjects = (data as any)?.projects || [];
+    const projects = rawProjects.map((project: any) => ({
+        ...project,
+        type: project.language,
+        version: project.envVersion,
+        path: project.isLocal ? project.localPath : project.gitUrl,
+        borderColor: getBorderColor(project.status),
+        tagClass: getTagClass(project.language),
+    }));
+
+    if (projects.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 bg-[#222222] border border-gray-700/50 rounded-2xl text-center">
+                <p className="text-gray-400">No projects found. Add your first project!</p>
+            </div>
+        );
+    }
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-sm font-semibold tracking-wider text-gray-400 uppercase">
-                    YOUR PROJECTS ({mockProjects.length})
+                    YOUR PROJECTS ({projects.length})
                 </h2>
                 <button
                     className="px-4 py-1.5 bg-transparent border border-gray-600 hover:border-gray-400 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
@@ -18,7 +78,7 @@ export const ProjectList = ({ mockProjects }: Props) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {mockProjects.map((project, idx) => (
+                {projects.map((project: any, idx: number) => (
                     <div key={idx} className={`bg-[#222222] border border-gray-700/50 rounded-xl p-5 ${project.borderColor} border-l-[3px] hover:border-gray-500 transition-colors`}>
                         <div className="flex justify-between items-start mb-1">
                             <h3 className="text-xl font-bold text-gray-100">{project.name}</h3>
