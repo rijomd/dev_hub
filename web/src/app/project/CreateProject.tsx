@@ -5,21 +5,23 @@ import { InputBox, Button } from '@dev-hub/ui';
 import { client } from '../utils/gql-client';
 import { CREATE_PROJECT_MUTATION } from './query';
 
+const initialData = {
+  name: '',
+  language: 'Node.js',
+  framework: 'React',
+  isLocal: true,
+  localPath: '',
+  gitUrl: '',
+  envVersion: '',
+  installCommand: 'npm install',
+  runCommand: 'npm start',
+  buildCommand: 'npm run build',
+  stopCommand: 'npm stop',
+  port: 3000,
+}
+
 export function CreateProject({ onProjectCreated }: { onProjectCreated?: () => void }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    language: 'Node.js',
-    framework: 'React',
-    isLocal: true,
-    localPath: '',
-    gitUrl: '',
-    envVersion: '',
-    installCommand: 'npm install',
-    runCommand: 'npm start',
-    buildCommand: 'npm run build',
-    stopCommand: 'npm stop',
-    port: 3000,
-  });
+  const [formData, setFormData] = useState(initialData);
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
@@ -32,21 +34,7 @@ export function CreateProject({ onProjectCreated }: { onProjectCreated?: () => v
     },
     onSuccess: () => {
       if (onProjectCreated) onProjectCreated();
-      // Reset form
-      setFormData({
-        name: '',
-        language: 'Node.js',
-        framework: 'React',
-        isLocal: true,
-        localPath: '',
-        gitUrl: '',
-        envVersion: '',
-        installCommand: 'npm install',
-        runCommand: 'npm start',
-        buildCommand: 'npm run build',
-        stopCommand: 'npm stop',
-        port: 3000,
-      });
+      setFormData(initialData);
     },
     onError: (err: any) => {
       setError(err.response?.errors?.[0]?.message || 'Failed to create project.');

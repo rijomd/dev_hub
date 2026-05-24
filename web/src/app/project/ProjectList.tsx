@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { client } from "../utils/gql-client";
 import { GET_PROJECTS_QUERY } from "./query";
 
@@ -6,7 +6,7 @@ type Props = {
 }
 
 export const ProjectList = ({ }: Props) => {
-    const { data, isPending } = useQuery({
+    const { data } = useSuspenseQuery({
         queryKey: ['projects'],
         queryFn: async () => await client.request(GET_PROJECTS_QUERY),
     });
@@ -36,15 +36,6 @@ export const ProjectList = ({ }: Props) => {
                 return 'bg-gray-100 text-gray-800';
         }
     };
-
-    if (isPending) {
-        return (
-            <div className="flex justify-center items-center py-24">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
-                <span className="ml-3 text-gray-400 text-sm">Loading projects...</span>
-            </div>
-        );
-    }
 
     const rawProjects = (data as any)?.projects || [];
     const projects = rawProjects.map((project: any) => ({
