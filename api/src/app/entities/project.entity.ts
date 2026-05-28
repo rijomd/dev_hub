@@ -42,10 +42,10 @@ export class Project {
 
   @Column({
     type: 'enum',
-    enum: ['running', 'stopped', 'building'],
+    enum: ['running', 'stopped', 'building', 'error'],
     default: 'stopped'
   })
-  status!: 'running' | 'stopped' | 'building';
+  status!: 'running' | 'stopped' | 'building' | 'error';
 
   @Column()
   port!: number;

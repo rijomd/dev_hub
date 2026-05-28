@@ -21,3 +21,12 @@ npx nx run @dev-hub/web:build
 
 # tailwind 
 npm install tailwindcss @tailwindcss/vite
+
+
+up coming events :- 
+1.add the project
+2.list the project
+3.when click run then start process (if any error need to alert users)
+4.show the local consoles on log on each project / console tab is there shows on there by each project (like cloud watch)
+5.stop process
+6.build process

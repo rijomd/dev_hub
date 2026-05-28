@@ -17,6 +17,8 @@ export const ProjectList = ({ }: Props) => {
                 return 'border-l-emerald-400';
             case 'building':
                 return 'border-l-amber-400';
+            case 'error':
+                return 'border-l-red-400';
             default:
                 return 'border-l-gray-500';
         }
@@ -84,7 +86,7 @@ export const ProjectList = ({ }: Props) => {
 
                         <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
                             <span className={`w-2.5 h-2.5 rounded-full ${project.status === 'running' ? 'bg-emerald-500' :
-                                project.status === 'building' ? 'bg-amber-500' :
+                                project.status === 'building' ? 'bg-amber-500' : project.status === 'error' ? 'bg-red-400' :
                                     'bg-gray-500'
                                 }`}></span>
                             <span className={project.status === 'running' ? 'text-gray-300' : ''}>{project.status}</span>
