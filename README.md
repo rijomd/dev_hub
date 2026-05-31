@@ -30,3 +30,14 @@ up coming events :-
 4.show the local consoles on log on each project / console tab is there shows on there by each project (like cloud watch)
 5.stop process
 6.build process
+
+live logs
+auto restart
+CPU/memory monitor
+dependency graph
+port conflict detection
+environment manager
+Node version manager
+Docker support
+terminal UI
+build status

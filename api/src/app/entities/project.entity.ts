@@ -1,6 +1,18 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, type Relation } from 'typeorm';
 import { User } from './user.entity';
 import { ProjectLog } from './project-log.entity';
+import { registerEnumType } from '@nestjs/graphql';
+
+
+export enum ProjectStatus {
+  STARTING = 'starting',
+  RUNNING = 'running',
+  BUILDING = 'building',
+  STOPPING = 'stopping',
+  ERROR = 'error',
+  STOPPED = 'stopped',
+}
+registerEnumType(ProjectStatus, { name: 'ProjectStatus' });
 
 @Entity()
 export class Project {
@@ -42,10 +54,10 @@ export class Project {
 
   @Column({
     type: 'enum',
-    enum: ['running', 'stopped', 'building', 'error'],
-    default: 'stopped'
+    enum: ProjectStatus,
+    default: ProjectStatus.STOPPED
   })
-  status!: 'running' | 'stopped' | 'building' | 'error';
+  status!: ProjectStatus;
 
   @Column()
   port!: number;

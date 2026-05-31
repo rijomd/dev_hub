@@ -19,24 +19,25 @@ export const ProjectList = ({ }: Props) => {
                 return 'border-l-amber-400';
             case 'error':
                 return 'border-l-red-400';
+            case 'starting':
+                return 'border-l-blue-400';
+            case 'stopping':
+                return 'border-l-orange-400';
             default:
                 return 'border-l-gray-500';
         }
     };
 
     const getTagClass = (language: string) => {
-        switch (language?.toLowerCase()) {
-            case 'nodejs':
-                return 'bg-emerald-50 text-emerald-700';
-            case 'react':
-                return 'bg-indigo-50 text-indigo-700';
-            case 'python':
-                return 'bg-blue-50 text-blue-700';
-            case 'java':
-                return 'bg-orange-50 text-orange-700';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
+        const lang = language?.toLowerCase() || '';
+        if (lang.includes('node')) return 'bg-emerald-50 text-green-700';
+        if (lang.includes('react')) return 'bg-indigo-50 text-indigo-700';
+        if (lang.includes('python')) return 'bg-blue-50 text-blue-700';
+        if (lang.includes('java')) return 'bg-orange-50 text-orange-700';
+        if (lang.includes('js')) return 'bg-yellow-50 text-yellow-700';
+        if (lang.includes('ts')) return 'bg-indigo-50 text-indigo-700';
+
+        return 'bg-gray-100 text-gray-800';
     };
 
     const rawProjects = (data as any)?.projects || [];

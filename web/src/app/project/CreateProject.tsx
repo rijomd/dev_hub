@@ -7,16 +7,16 @@ import { CREATE_PROJECT_MUTATION } from './query';
 
 const initialData = {
   name: '',
-  language: 'Node.js',
-  framework: 'React',
+  language: '',
+  framework: '',
   isLocal: true,
   localPath: '',
   gitUrl: '',
   envVersion: '',
-  installCommand: 'npm install',
-  runCommand: 'npm start',
-  buildCommand: 'npm run build',
-  stopCommand: 'npm stop',
+  installCommand: '',
+  runCommand: '',
+  buildCommand: '',
+  stopCommand: '',
   port: 3000,
 }
 
@@ -84,6 +84,7 @@ export function CreateProject({ onProjectCreated }: { onProjectCreated?: () => v
               name="language"
               value={formData.language}
               onChange={handleChange}
+              placeholder="Node js / TS"
               className="w-full px-4 py-3 rounded-xl  transition-all outline-none bg-[#2a2a2a]/80 text-gray-200 backdrop-blur-sm"
             />
           </div>
@@ -94,6 +95,7 @@ export function CreateProject({ onProjectCreated }: { onProjectCreated?: () => v
               name="framework"
               value={formData.framework}
               onChange={handleChange}
+              placeholder="Next JS"
               className="w-full px-4 py-3 rounded-xl  transition-all outline-none bg-[#2a2a2a]/80 text-gray-200 backdrop-blur-sm"
             />
           </div>
@@ -144,6 +146,7 @@ export function CreateProject({ onProjectCreated }: { onProjectCreated?: () => v
               name="installCommand"
               value={formData.installCommand}
               onChange={handleChange}
+              placeholder="npm install"
               className="w-full px-4 py-3 rounded-xl  transition-all outline-none bg-[#2a2a2a]/80 text-gray-200 font-mono text-sm backdrop-blur-sm"
             />
           </div>
@@ -154,6 +157,7 @@ export function CreateProject({ onProjectCreated }: { onProjectCreated?: () => v
               name="buildCommand"
               value={formData.buildCommand}
               onChange={handleChange}
+              placeholder="npm run build"
               className="w-full px-4 py-3 rounded-xl  transition-all outline-none bg-[#2a2a2a]/80 text-gray-200 font-mono text-sm backdrop-blur-sm"
             />
           </div>
@@ -164,6 +168,7 @@ export function CreateProject({ onProjectCreated }: { onProjectCreated?: () => v
               name="runCommand"
               value={formData.runCommand}
               onChange={handleChange}
+              placeholder="npm run dev"
               className="w-full px-4 py-3 rounded-xl  transition-all outline-none bg-[#2a2a2a]/80 text-gray-200 font-mono text-sm backdrop-blur-sm"
             />
           </div>
@@ -174,6 +179,7 @@ export function CreateProject({ onProjectCreated }: { onProjectCreated?: () => v
               name="stopCommand"
               value={formData.stopCommand}
               onChange={handleChange}
+              placeholder="npm run stop"
               className="w-full px-4 py-3 rounded-xl  transition-all outline-none bg-[#2a2a2a]/80 text-gray-200 font-mono text-sm backdrop-blur-sm"
             />
           </div>

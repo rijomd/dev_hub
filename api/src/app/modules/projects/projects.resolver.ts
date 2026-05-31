@@ -1,19 +1,25 @@
-import { Resolver, Query, Mutation, Args, Context, Int, ResolveField, Parent } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Context, Int, ResolveField, Parent, Subscription } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 
 import { GqlJwtAuthGuard } from '../auth/gql-jwt-auth.guard';
-import { ProjectsService } from './projects.service';
+import { ProjectsRepository } from './projects.repository';
 import { ProjectObject, CreateProjectInput, UpdateProjectInput } from './projects.types';
+import { ProjectService } from './project.service';
+import { ProjectsPubSub } from './projects.pubsub';
 
 @Resolver(() => ProjectObject)
 export class ProjectsResolver {
-  constructor(private readonly projectsService: ProjectsService) { }
+  constructor(
+    private readonly projectsRepository: ProjectsRepository,
+    private readonly projectService: ProjectService,
+    private readonly pubSub: ProjectsPubSub,
+  ) { }
 
   @UseGuards(GqlJwtAuthGuard)
   @Query(() => [ProjectObject], { description: 'Get all projects for the authenticated user' })
   projects(@Context() context: any): Promise<ProjectObject[]> {
     const userId: number = context.req.user.userId;
-    return this.projectsService.getProjects(userId) as unknown as Promise<ProjectObject[]>;
+    return this.projectsRepository.getProjects(userId) as unknown as Promise<ProjectObject[]>;
   }
 
   @UseGuards(GqlJwtAuthGuard)
@@ -23,7 +29,7 @@ export class ProjectsResolver {
     @Context() context: any,
   ): Promise<ProjectObject> {
     const userId: number = context.req.user.userId;
-    return this.projectsService.createProject(input, userId) as unknown as Promise<ProjectObject>;
+    return this.projectsRepository.createProject(input, userId) as unknown as Promise<ProjectObject>;
   }
 
   @UseGuards(GqlJwtAuthGuard)
@@ -34,7 +40,7 @@ export class ProjectsResolver {
     @Context() context: any,
   ): Promise<ProjectObject> {
     const userId: number = context.req.user.userId;
-    return this.projectsService.updateProject(id, input, userId) as unknown as Promise<ProjectObject>;
+    return this.projectsRepository.updateProject(id, input, userId) as unknown as Promise<ProjectObject>;
   }
 
   @UseGuards(GqlJwtAuthGuard)
@@ -44,12 +50,51 @@ export class ProjectsResolver {
     @Context() context: any,
   ): Promise<boolean> {
     const userId: number = context.req.user.userId;
-    return this.projectsService.deleteProject(id, userId);
+    return this.projectsRepository.deleteProject(id, userId);
   }
 
   @ResolveField(() => Int)
   uptime(@Parent() project: ProjectObject) {
     return 100;
+  }
+
+  @UseGuards(GqlJwtAuthGuard)
+  @Mutation(() => ProjectObject)
+  runProject(
+    @Args('id', { type: () => Int }) id: number,
+    @Context() context: any,
+  ) {
+    const userId = context.req.user.userId;
+    return this.projectService.run(id, userId) as unknown as Promise<ProjectObject>;
+  }
+
+  @UseGuards(GqlJwtAuthGuard)
+  @Mutation(() => ProjectObject)
+  stopProject(
+    @Args('id', { type: () => Int }) id: number,
+    @Context() context: any,
+  ) {
+    const userId = context.req.user.userId;
+    return this.projectService.stop(id, userId) as unknown as Promise<ProjectObject>;
+  }
+
+  @UseGuards(GqlJwtAuthGuard)
+  @Mutation(() => ProjectObject)
+  buildProject(
+    @Args('id', { type: () => Int }) id: number,
+    @Context() context: any,
+  ) {
+    const userId = context.req.user.userId;
+    return this.projectService.build(id, userId) as unknown as Promise<ProjectObject>;
+  }
+
+  // ← UI subscribes to this for live badge updates
+  @Subscription(() => ProjectObject, {
+    filter: (payload, variables) =>
+      payload.projectStatusChanged.id === variables.id,
+  })
+  projectStatusChanged(@Args('id', { type: () => Int }) id: number) {
+    return (this.pubSub as any).asyncIterator('PROJECT_STATUS_CHANGED');
   }
 
 }

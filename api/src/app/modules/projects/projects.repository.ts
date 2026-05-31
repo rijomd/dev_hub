@@ -1,16 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Project } from '../../entities/project.entity';
+import { Project, ProjectStatus } from '../../entities/project.entity';
 import { User } from '../../entities/user.entity';
 import { CreateProjectInput, UpdateProjectInput } from './projects.types';
 
 @Injectable()
-export class ProjectsService {
+export class ProjectsRepository {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepo: Repository<Project>,
-  ) {}
+  ) { }
 
   getProjects(userId: number): Promise<Project[]> {
     return this.projectRepo.find({
@@ -19,10 +19,28 @@ export class ProjectsService {
     });
   }
 
+  // manually handle null case
+  async getProjectById(projectId: number, userId: number): Promise<Project | null> {
+    return await this.projectRepo.findOne({
+      where: { id: projectId, user: { id: userId } },
+
+    });
+  }
+
+  // auto throw 404
+  async getProjectByIdorFail(projectId: number): Promise<Project> {
+    return await this.projectRepo.findOneByOrFail({ id: projectId });
+  }
+
+
+  async updateProjectStatus(id: number, status: ProjectStatus): Promise<void> {
+    await this.projectRepo.update(id, { status });
+  }
+
   async createProject(input: CreateProjectInput, userId: number): Promise<Project> {
     const project = this.projectRepo.create({
       ...input,
-      status: 'stopped',
+      status: ProjectStatus.STOPPED,
       user: { id: userId } as User,
     });
     return this.projectRepo.save(project);
