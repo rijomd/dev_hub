@@ -12,3 +12,11 @@ export const client = new GraphQLClient(endpoint, {
     return headers;
   },
 });
+
+
+export async function gqlRequest<T>(
+  document: string,
+  variables?: Record<string, any>,
+): Promise<T> {
+  return client.request<T>(document, variables);
+}
