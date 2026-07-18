@@ -27,4 +27,29 @@ export const GET_PROJECTS_QUERY = gql`
   }
 `;
 
+export const RUN_PROJECT_MUTATION = gql`
+  mutation RunProject($id: Int!) {
+    runProject(id: $id) {
+      id
+      status
+    }
+  }
+`;
 
+export const BUILD_PROJECT_MUTATION = gql`
+  mutation BuildProject($id: Int!) {
+    buildProject(id: $id) {
+      id
+      status
+    }
+  }
+`;
+
+export const STOP_PROJECT_MUTATION = gql`
+  mutation StopProject($id: Int!) {
+    stopProject(id: $id) {
+      id
+      status
+    }
+  }
+`;

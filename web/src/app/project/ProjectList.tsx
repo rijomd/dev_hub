@@ -1,14 +1,30 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { client } from "../utils/gql-client";
-import { GET_PROJECTS_QUERY } from "./query";
+import { useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { gqlRequest } from "../utils/gql-client";
+import { GET_PROJECTS_QUERY, RUN_PROJECT_MUTATION, BUILD_PROJECT_MUTATION, STOP_PROJECT_MUTATION } from "./query";
 
 type Props = {
 }
 
 export const ProjectList = ({ }: Props) => {
+    const queryClient = useQueryClient();
     const { data } = useSuspenseQuery({
         queryKey: ['projects'],
-        queryFn: async () => await client.request(GET_PROJECTS_QUERY),
+        queryFn: async () => await gqlRequest(GET_PROJECTS_QUERY),
+    });
+
+    const runMutation = useMutation({
+        mutationFn: async (id: number) => await gqlRequest(RUN_PROJECT_MUTATION, { id }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projects'] }),
+    });
+
+    const buildMutation = useMutation({
+        mutationFn: async (id: number) => await gqlRequest(BUILD_PROJECT_MUTATION, { id }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projects'] }),
+    });
+
+    const stopMutation = useMutation({
+        mutationFn: async (id: number) => await gqlRequest(STOP_PROJECT_MUTATION, { id }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projects'] }),
     });
 
     const getBorderColor = (status: string) => {
@@ -101,7 +117,15 @@ export const ProjectList = ({ }: Props) => {
 
                         <div className="flex gap-2">
                             {['run', 'build', 'stop', 'logs'].map(action => (
-                                <button key={action} className="px-4 py-1.5 bg-transparent border border-gray-600 rounded-xl text-sm hover:bg-gray-700 hover:text-white transition-colors">
+                                <button
+                                    key={action}
+                                    onClick={() => {
+                                        if (action === 'run') runMutation.mutate(parseInt(project.id));
+                                        if (action === 'build') buildMutation.mutate(parseInt(project.id));
+                                        if (action === 'stop') stopMutation.mutate(parseInt(project.id));
+                                    }}
+                                    className="px-4 py-1.5 bg-transparent border border-gray-600 rounded-xl text-sm hover:bg-gray-700 hover:text-white transition-colors"
+                                >
                                     {action}
                                 </button>
                             ))}

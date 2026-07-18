@@ -88,10 +88,14 @@ export class ProjectService {
         const proc = this.procs.get(projectId);
         if (proc) {
             await this.updateStatus(project, ProjectStatus.STOPPING);
-            proc.kill('SIGTERM');                            // graceful first
-            setTimeout(() => {
-                if (this.procs.has(projectId)) proc.kill('SIGKILL'); // force after 5s
-            }, 5000);
+            if (process.platform === 'win32') {
+                spawn('taskkill', ['/pid', proc.pid!.toString(), '/t', '/f']);
+            } else {
+                proc.kill('SIGTERM');                            // graceful first
+                setTimeout(() => {
+                    if (this.procs.has(projectId)) proc.kill('SIGKILL'); // force after 5s
+                }, 5000);
+            }
         } else {
             // Also ensure it is marked as stopped if no process is found
             await this.updateStatus(project, ProjectStatus.STOPPED);
