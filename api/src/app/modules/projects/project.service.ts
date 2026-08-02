@@ -25,7 +25,9 @@ export class ProjectService {
         }
 
         if (this.procs.has(projectId)) {
-            throw new Error('Project is already running');
+            const msg = 'Project is already running';
+            await this.projectsRepository.logError(projectId, userId, 'run', msg);
+            throw new Error(msg);
         }
 
         await this.updateStatus(project, ProjectStatus.STARTING);
@@ -63,6 +65,7 @@ export class ProjectService {
         proc.on('error', async (err) => {
             this.logger.error(`Process error [${project.name}]:`, err.message);
             this.procs.delete(projectId);
+            await this.projectsRepository.logError(projectId, userId, 'run', err.message, { stack: err.stack, name: err.name });
             await this.updateStatus(project, ProjectStatus.ERROR, err.message);
         });
 
@@ -75,6 +78,7 @@ export class ProjectService {
                 // non-zero exit = crash
                 const msg = `Process exited with code ${code}`;
                 this.gateway.pushLog(projectId.toString(), msg, 'error');
+                await this.projectsRepository.logError(projectId, userId, 'run', msg, { code, signal });
                 await this.updateStatus(project, ProjectStatus.ERROR, msg);
             }
         });
@@ -88,13 +92,19 @@ export class ProjectService {
         const proc = this.procs.get(projectId);
         if (proc) {
             await this.updateStatus(project, ProjectStatus.STOPPING);
-            if (process.platform === 'win32') {
-                spawn('taskkill', ['/pid', proc.pid!.toString(), '/t', '/f']);
-            } else {
-                proc.kill('SIGTERM');                            // graceful first
-                setTimeout(() => {
-                    if (this.procs.has(projectId)) proc.kill('SIGKILL'); // force after 5s
-                }, 5000);
+            try {
+                if (process.platform === 'win32') {
+                    spawn('taskkill', ['/pid', proc.pid!.toString(), '/t', '/f']);
+                } else {
+                    proc.kill('SIGTERM');                            // graceful first
+                    setTimeout(() => {
+                        if (this.procs.has(projectId)) proc.kill('SIGKILL'); // force after 5s
+                    }, 5000);
+                }
+            } catch (err: any) {
+                this.logger.error(`Stop error [${project.name}]:`, err.message);
+                await this.projectsRepository.logError(projectId, userId, 'stop', err.message, { stack: err.stack });
+                await this.updateStatus(project, ProjectStatus.ERROR, err.message);
             }
         } else {
             // Also ensure it is marked as stopped if no process is found
@@ -118,6 +128,9 @@ export class ProjectService {
         proc.on('exit', async (code) => {
             const next = code === 0 ? ProjectStatus.STOPPED : ProjectStatus.ERROR;
             const err = code !== 0 ? `Build exited with code ${code}` : undefined;
+            if (code !== 0) {
+                await this.projectsRepository.logError(projectId, userId, 'build', err || 'Unknown build error', { code });
+            }
             await this.updateStatus(project, next, err);
         });
 

@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, type Relation } from 'typeorm';
 import { User } from './user.entity';
 import { ProjectLog } from './project-log.entity';
+import { ProjectError } from './project-error.entity';
 import { registerEnumType } from '@nestjs/graphql';
 
 
@@ -67,6 +68,9 @@ export class Project {
 
   @OneToMany(() => ProjectLog, (log) => log.project)
   logs!: Relation<ProjectLog>[];
+
+  @OneToMany(() => ProjectError, (error) => error.project)
+  errors!: Relation<ProjectError>[];
 
   @CreateDateColumn()
   createdAt!: Date;
