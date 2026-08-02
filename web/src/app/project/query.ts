@@ -53,3 +53,12 @@ export const STOP_PROJECT_MUTATION = gql`
     }
   }
 `;
+
+export const subscriptionQuery = `
+      subscription OnProjectStatusChanged($id: Int!) {
+        projectStatusChanged(id: $id) {
+          id
+          status
+        }
+      }
+    `;

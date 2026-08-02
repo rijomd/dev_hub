@@ -23,7 +23,7 @@ npx nx run @dev-hub/web:build
 npm install tailwindcss @tailwindcss/vite
 
 
-up coming events :- 
+ events :- 
 1.add the project
 2.list the project
 3.when click run then start process (if any error need to alert users)

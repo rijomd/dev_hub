@@ -34,6 +34,9 @@ import { AppService } from './app.service';
       sortSchema: true,
       playground: true,          // Apollo Playground at /graphql
       context: ({ req }: { req: Request }) => ({ req }),  // expose req so guards can read JWT header
+      subscriptions: { //enable graphql sub-pub
+        'graphql-ws': true,
+      },
     }),
 
     AuthModule,

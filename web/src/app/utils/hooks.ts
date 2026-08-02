@@ -38,3 +38,7 @@ export const useLogout = () => {
         });
     };
 };
+
+export const getItemLocalStorage = (key: string) => {
+    return localStorage.getItem(key);
+}
