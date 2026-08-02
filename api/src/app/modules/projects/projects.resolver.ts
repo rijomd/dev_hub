@@ -94,7 +94,7 @@ export class ProjectsResolver {
       payload.projectStatusChanged.id === variables.id,
   })
   projectStatusChanged(@Args('id', { type: () => Int }) id: number) {
-    return (this.pubSub as any).asyncIterator('PROJECT_STATUS_CHANGED');
+    return this.pubSub.asyncIterator('PROJECT_STATUS_CHANGED');
   }
 
 }

@@ -1,10 +1,10 @@
 import { GraphQLClient } from 'graphql-request';
+import { ACCESS_TOKEN, END_POINT_HTTP } from './authConstants';
+import { getItemLocalStorage } from './hooks';
 
-const endpoint = 'http://localhost:8000/graphql';
-
-export const client = new GraphQLClient(endpoint, {
+export const client = new GraphQLClient(END_POINT_HTTP, {
   headers: () => {
-    const token = localStorage.getItem('access_token');
+    const token = getItemLocalStorage(ACCESS_TOKEN)
     const headers: Record<string, string> = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
