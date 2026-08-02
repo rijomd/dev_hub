@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Project, ProjectStatus } from '../../entities/project.entity';
+import { ProjectError } from '../../entities/project-error.entity';
 import { User } from '../../entities/user.entity';
 import { CreateProjectInput, UpdateProjectInput } from './projects.types';
 
@@ -10,6 +11,8 @@ export class ProjectsRepository {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepo: Repository<Project>,
+    @InjectRepository(ProjectError)
+    private readonly errorRepo: Repository<ProjectError>,
   ) { }
 
   getProjects(userId: number): Promise<Project[]> {
@@ -70,5 +73,16 @@ export class ProjectsRepository {
 
     await this.projectRepo.remove(project);
     return true;
+  }
+
+  async logError(projectId: number, userId: number, action: string, message: string, details?: any): Promise<ProjectError> {
+    const error = this.errorRepo.create({
+      project: { id: projectId } as Project,
+      user: { id: userId } as User,
+      action,
+      message,
+      details,
+    });
+    return this.errorRepo.save(error);
   }
 }

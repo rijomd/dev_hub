@@ -9,10 +9,11 @@ import { ProjectsGateway } from './project.gateway';
 import { ProjectService } from './project.service';
 import { ProjectController } from './project.controller';
 import { ProjectLog } from '../../entities/project-log.entity';
+import { ProjectError } from '../../entities/project-error.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project, ProjectLog]),
+    TypeOrmModule.forFeature([Project, ProjectLog, ProjectError]),
     AuthModule,
   ],
   controllers: [ProjectController],
