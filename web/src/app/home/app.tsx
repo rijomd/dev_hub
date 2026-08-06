@@ -8,9 +8,12 @@ const ProjectList = lazy(() =>
 const CreateProject = lazy(() =>
   import('../project/CreateProject').then(m => ({ default: m.CreateProject }))
 );
+const ConsoleTab = lazy(() =>
+  import('./ConsoleTab').then(m => ({ default: m.ConsoleTab }))
+);
 
 export function Dashboard() {
-  const [activeTab, setActiveTab] = useState<'active' | 'add'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'add' | 'console'>('active');
 
   return (
     <div className="min-h-screen bg-[#141414] text-gray-200 font-sans">
@@ -20,7 +23,7 @@ export function Dashboard() {
             <Suspense fallback={<LoadingFallback />}>
               <ProjectList />
             </Suspense>
-          ) : (
+          ) : activeTab === 'add' ? (
             <div className="bg-[#222222] p-8 rounded-2xl">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-100">Add Project</h2>
@@ -32,6 +35,10 @@ export function Dashboard() {
                 <CreateProject onProjectCreated={() => setActiveTab('active')} />
               </Suspense>
             </div>
+          ) : (
+            <Suspense fallback={<LoadingFallback />}>
+              <ConsoleTab />
+            </Suspense>
           )}
         </main>
     </div>

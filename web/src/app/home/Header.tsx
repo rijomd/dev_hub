@@ -3,8 +3,8 @@ import { useLogout } from '../utils/hooks';
 import { Tabs } from './Tabs';
 
 type HeaderProps = {
-    activeTab: 'active' | 'add';
-    setActiveTab: (tab: 'active' | 'add') => void;
+    activeTab: 'active' | 'add' | 'console';
+    setActiveTab: (tab: 'active' | 'add' | 'console') => void;
 };
 
 export const Header = ({ activeTab, setActiveTab }: HeaderProps) => {

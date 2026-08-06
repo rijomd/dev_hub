@@ -51,6 +51,27 @@ export class ProjectObject {
   updatedAt!: Date;
 }
 
+@ObjectType()
+export class ProjectErrorObject {
+  @Field(() => Int)
+  id!: number;
+
+  @Field(() => ProjectObject, { nullable: true })
+  project?: ProjectObject;
+
+  @Field()
+  message!: string;
+
+  @Field()
+  action!: string;
+
+  @Field({ nullable: true })
+  details?: string;
+
+  @Field()
+  timestamp!: Date;
+}
+
 @InputType()
 export class CreateProjectInput {
   @Field()
