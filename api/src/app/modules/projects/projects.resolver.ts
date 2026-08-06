@@ -3,7 +3,7 @@ import { UseGuards } from '@nestjs/common';
 
 import { GqlJwtAuthGuard } from '../auth/gql-jwt-auth.guard';
 import { ProjectsRepository } from './projects.repository';
-import { ProjectObject, CreateProjectInput, UpdateProjectInput } from './projects.types';
+import { ProjectObject, CreateProjectInput, UpdateProjectInput, ProjectErrorObject } from './projects.types';
 import { ProjectService } from './project.service';
 import { ProjectsPubSub } from './projects.pubsub';
 
@@ -20,6 +20,13 @@ export class ProjectsResolver {
   projects(@Context() context: any): Promise<ProjectObject[]> {
     const userId: number = context.req.user.userId;
     return this.projectsRepository.getProjects(userId) as unknown as Promise<ProjectObject[]>;
+  }
+
+  @UseGuards(GqlJwtAuthGuard)
+  @Query(() => [ProjectErrorObject], { description: 'Get all project errors for the authenticated user' })
+  projectErrors(@Context() context: any): Promise<ProjectErrorObject[]> {
+    const userId: number = context.req.user.userId;
+    return this.projectsRepository.getErrors(userId) as unknown as Promise<ProjectErrorObject[]>;
   }
 
   @UseGuards(GqlJwtAuthGuard)
@@ -98,3 +105,15 @@ export class ProjectsResolver {
   }
 
 }
+
+@Resolver(() => ProjectErrorObject)
+export class ProjectErrorResolver {
+  @ResolveField(() => String, { nullable: true })
+  details(@Parent() error: ProjectErrorObject) {
+    if (error.details) {
+      return typeof error.details === 'string' ? error.details : JSON.stringify(error.details);
+    }
+    return null;
+  }
+}
+

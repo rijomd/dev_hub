@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Project } from '../../entities/project.entity';
 import { ProjectsRepository } from './projects.repository';
-import { ProjectsResolver } from './projects.resolver';
+import { ProjectsResolver, ProjectErrorResolver } from './projects.resolver';
 import { AuthModule } from '../auth/auth.module';
 import { ProjectsPubSub } from './projects.pubsub';
 import { ProjectsGateway } from './project.gateway';
@@ -17,6 +17,6 @@ import { ProjectError } from '../../entities/project-error.entity';
     AuthModule,
   ],
   controllers: [ProjectController],
-  providers: [ProjectsRepository, ProjectsResolver, ProjectsPubSub, ProjectsGateway, ProjectService],
+  providers: [ProjectsRepository, ProjectsResolver, ProjectErrorResolver, ProjectsPubSub, ProjectsGateway, ProjectService],
 })
 export class ProjectsModule { }

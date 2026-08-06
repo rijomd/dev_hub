@@ -22,6 +22,14 @@ export class ProjectsRepository {
     });
   }
 
+  getErrors(userId: number): Promise<ProjectError[]> {
+    return this.errorRepo.find({
+      where: { user: { id: userId } },
+      order: { timestamp: 'DESC' },
+      relations: ['project']
+    });
+  }
+
   // manually handle null case
   async getProjectById(projectId: number, userId: number): Promise<Project | null> {
     return await this.projectRepo.findOne({
