@@ -62,3 +62,28 @@ export const subscriptionQuery = `
         }
       }
     `;
+
+export const GET_PROJECT_ERRORS_QUERY = gql`
+  query GetProjectErrors($first: Int, $after: String) {
+    projectErrors(first: $first, after: $after) {
+      edges {
+        cursor
+        node {
+          id
+          message
+          action
+          details
+          timestamp
+          project {
+            id
+            name
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;

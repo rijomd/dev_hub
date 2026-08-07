@@ -36,9 +36,7 @@ export function Dashboard() {
               </Suspense>
             </div>
           ) : (
-            <Suspense fallback={<LoadingFallback />}>
-              <ConsoleTab />
-            </Suspense>
+            <ConsoleTab />
           )}
         </main>
     </div>
