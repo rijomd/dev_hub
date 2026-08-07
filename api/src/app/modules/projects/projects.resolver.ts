@@ -3,7 +3,7 @@ import { UseGuards } from '@nestjs/common';
 
 import { GqlJwtAuthGuard } from '../auth/gql-jwt-auth.guard';
 import { ProjectsRepository } from './projects.repository';
-import { ProjectObject, CreateProjectInput, UpdateProjectInput, ProjectErrorObject } from './projects.types';
+import { ProjectObject, CreateProjectInput, UpdateProjectInput, ProjectErrorObject, ProjectErrorsPage, ProjectErrorsArgs } from './projects.types';
 import { ProjectService } from './project.service';
 import { ProjectsPubSub } from './projects.pubsub';
 
@@ -23,10 +23,13 @@ export class ProjectsResolver {
   }
 
   @UseGuards(GqlJwtAuthGuard)
-  @Query(() => [ProjectErrorObject], { description: 'Get all project errors for the authenticated user' })
-  projectErrors(@Context() context: any): Promise<ProjectErrorObject[]> {
+  @Query(() => ProjectErrorsPage, { description: 'Get paginated project errors for the authenticated user' })
+  projectErrors(
+    @Context() context: any,
+    @Args() args: ProjectErrorsArgs,
+  ): Promise<ProjectErrorsPage> {
     const userId: number = context.req.user.userId;
-    return this.projectsRepository.getErrors(userId) as unknown as Promise<ProjectErrorObject[]>;
+    return this.projectsRepository.getErrors(userId, args.first ?? 20, args.after);
   }
 
   @UseGuards(GqlJwtAuthGuard)

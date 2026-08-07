@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, LessThan } from 'typeorm';
 import { Project, ProjectStatus } from '../../entities/project.entity';
 import { ProjectError } from '../../entities/project-error.entity';
 import { User } from '../../entities/user.entity';
-import { CreateProjectInput, UpdateProjectInput } from './projects.types';
+import { CreateProjectInput, UpdateProjectInput, ProjectErrorEdge, ProjectErrorsPage } from './projects.types';
 
 @Injectable()
 export class ProjectsRepository {
@@ -22,12 +22,36 @@ export class ProjectsRepository {
     });
   }
 
-  getErrors(userId: number): Promise<ProjectError[]> {
-    return this.errorRepo.find({
-      where: { user: { id: userId } },
+  async getErrors(userId: number, first: number = 20, after?: string): Promise<ProjectErrorsPage> {
+    const limit = first + 1;
+    const where: any = { user: { id: userId } };
+
+    if (after) {
+      const decoded = Buffer.from(after, 'base64').toString('utf8');
+      where.timestamp = LessThan(new Date(decoded));
+    }
+
+    const rows = await this.errorRepo.find({
+      where,
       order: { timestamp: 'DESC' },
-      relations: ['project']
+      relations: ['project'],
+      take: limit,
     });
+
+    const hasNextPage = rows.length === limit;
+    const items = hasNextPage ? rows.slice(0, first) : rows;
+
+    const edges: ProjectErrorEdge[] = items.map((item) => ({
+      cursor: Buffer.from(item.timestamp.toISOString()).toString('base64'),
+      node: item as any,
+    }));
+
+    const endCursor = edges.length > 0 ? edges[edges.length - 1].cursor : undefined;
+
+    return {
+      edges,
+      pageInfo: { hasNextPage, endCursor },
+    };
   }
 
   // manually handle null case

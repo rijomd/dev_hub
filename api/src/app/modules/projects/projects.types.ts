@@ -1,4 +1,4 @@
-import { ObjectType, Field, Int, InputType } from '@nestjs/graphql';
+import { ObjectType, Field, Int, InputType, ArgsType } from '@nestjs/graphql';
 
 @ObjectType()
 export class ProjectObject {
@@ -70,6 +70,42 @@ export class ProjectErrorObject {
 
   @Field()
   timestamp!: Date;
+}
+
+@ObjectType()
+export class PageInfo {
+  @Field({ nullable: true })
+  endCursor?: string;
+
+  @Field()
+  hasNextPage!: boolean;
+}
+
+@ObjectType()
+export class ProjectErrorEdge {
+  @Field()
+  cursor!: string;
+
+  @Field(() => ProjectErrorObject)
+  node!: ProjectErrorObject;
+}
+
+@ObjectType()
+export class ProjectErrorsPage {
+  @Field(() => [ProjectErrorEdge])
+  edges!: ProjectErrorEdge[];
+
+  @Field(() => PageInfo)
+  pageInfo!: PageInfo;
+}
+
+@ArgsType()
+export class ProjectErrorsArgs {
+  @Field({ nullable: true })
+  after?: string;
+
+  @Field(() => Int, { nullable: true, defaultValue: 20 })
+  first?: number;
 }
 
 @InputType()
