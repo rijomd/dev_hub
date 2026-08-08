@@ -98,6 +98,16 @@ export class ProjectsResolver {
     return this.projectService.build(id, userId) as unknown as Promise<ProjectObject>;
   }
 
+  @UseGuards(GqlJwtAuthGuard)
+  @Mutation(() => ProjectObject, { description: 'Restart a running or errored project' })
+  restartProject(
+    @Args('id', { type: () => Int }) id: number,
+    @Context() context: any,
+  ) {
+    const userId = context.req.user.userId;
+    return this.projectService.restart(id, userId) as unknown as Promise<ProjectObject>;
+  }
+
   // ← UI subscribes to this for live badge updates
   @Subscription(() => ProjectObject, {
     filter: (payload, variables) =>
