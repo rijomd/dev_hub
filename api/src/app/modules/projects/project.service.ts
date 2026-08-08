@@ -10,12 +10,28 @@ export class ProjectService {
     private readonly logger = new Logger(ProjectService.name);
     // in-memory process map — survives for the server lifetime
     private readonly procs = new Map<number, ChildProcess>();
+    // tracks projects where a stop was intentionally requested
+    private readonly stoppingProcs = new Set<number>();
 
     constructor(
         private readonly projectsRepository: ProjectsRepository,
         private readonly gateway: ProjectsGateway,
         private readonly pubSub: ProjectsPubSub,
     ) { }
+
+    /** Kill a stale/zombie process for a project without waiting for 'exit' event. */
+    private forceKillProc(projectId: number) {
+        const proc = this.procs.get(projectId);
+        if (!proc) return;
+        try {
+            if (process.platform === 'win32') {
+                spawn('taskkill', ['/pid', proc.pid!.toString(), '/t', '/f']);
+            } else {
+                proc.kill('SIGKILL');
+            }
+        } catch (_) { /* ignore */ }
+        this.procs.delete(projectId);
+    }
 
     async run(projectId: number, userId: number): Promise<Project> {
         const project = await this.projectsRepository.getProjectById(projectId, userId);
@@ -24,7 +40,12 @@ export class ProjectService {
             throw new NotFoundException(`Project #${projectId} not found`);
         }
 
-        if (this.procs.has(projectId)) {
+        // If in error state, clean up any stale process and reset to stopped first
+        if (project.status === ProjectStatus.ERROR) {
+            this.logger.log(`Project #${projectId} is in ERROR state — resetting to STOPPED before starting`);
+            this.forceKillProc(projectId);
+            await this.updateStatus(project, ProjectStatus.STOPPED);
+        } else if (this.procs.has(projectId)) {
             const msg = 'Project is already running';
             await this.projectsRepository.logError(projectId, userId, 'run', msg);
             throw new Error(msg);
@@ -71,8 +92,9 @@ export class ProjectService {
 
         proc.on('exit', async (code, signal) => {
             this.procs.delete(projectId);
-            if (code === 0 || signal === 'SIGTERM') {
-                // clean exit or manual stop
+            const wasIntentionallyStopped = this.stoppingProcs.delete(projectId);
+            if (code === 0 || signal === 'SIGTERM' || wasIntentionallyStopped) {
+                // clean exit, graceful SIGTERM, or user-requested stop (incl. Windows taskkill)
                 await this.updateStatus(project, ProjectStatus.STOPPED);
             } else {
                 // non-zero exit = crash
@@ -89,8 +111,18 @@ export class ProjectService {
     async stop(projectId: number, userId: number): Promise<Project> {
         const project = await this.projectsRepository.getProjectByIdorFail(projectId);
 
+        // If in error state, kill any stale process and reset directly to stopped
+        if (project.status === ProjectStatus.ERROR) {
+            this.logger.log(`Project #${projectId} is in ERROR state — forcing reset to STOPPED`);
+            this.forceKillProc(projectId);
+            await this.updateStatus(project, ProjectStatus.STOPPED);
+            return project;
+        }
+
         const proc = this.procs.get(projectId);
         if (proc) {
+            // Mark as intentionally stopping so the exit handler resolves to STOPPED
+            this.stoppingProcs.add(projectId);
             await this.updateStatus(project, ProjectStatus.STOPPING);
             try {
                 if (process.platform === 'win32') {
@@ -102,6 +134,7 @@ export class ProjectService {
                     }, 5000);
                 }
             } catch (err: any) {
+                this.stoppingProcs.delete(projectId);
                 this.logger.error(`Stop error [${project.name}]:`, err.message);
                 await this.projectsRepository.logError(projectId, userId, 'stop', err.message, { stack: err.stack });
                 await this.updateStatus(project, ProjectStatus.ERROR, err.message);
@@ -114,8 +147,25 @@ export class ProjectService {
         return project;
     }
 
+    async restart(projectId: number, userId: number): Promise<Project> {
+        const project = await this.projectsRepository.getProjectByIdorFail(projectId);
+        // Kill whatever is running (or stale from an error)
+        this.forceKillProc(projectId);
+        // Reset to STOPPED so run() can proceed cleanly
+        await this.updateStatus(project, ProjectStatus.STOPPED);
+        // Delegate to run() for a fresh start
+        return this.run(projectId, userId);
+    }
+
     async build(projectId: number, userId: number): Promise<Project> {
         const project = await this.projectsRepository.getProjectByIdorFail(projectId);
+
+        // If in error state, kill any stale process and reset to stopped before building
+        if (project.status === ProjectStatus.ERROR) {
+            this.logger.log(`Project #${projectId} is in ERROR state — resetting to STOPPED before build`);
+            this.forceKillProc(projectId);
+            await this.updateStatus(project, ProjectStatus.STOPPED);
+        }
 
         await this.updateStatus(project, ProjectStatus.BUILDING);
 

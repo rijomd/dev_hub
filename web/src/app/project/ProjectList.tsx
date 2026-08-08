@@ -1,6 +1,6 @@
 import { useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { gqlRequest } from "../utils/gql-client";
-import { GET_PROJECTS_QUERY, RUN_PROJECT_MUTATION, BUILD_PROJECT_MUTATION, STOP_PROJECT_MUTATION } from "./query";
+import { GET_PROJECTS_QUERY, RUN_PROJECT_MUTATION, BUILD_PROJECT_MUTATION, STOP_PROJECT_MUTATION, RESTART_PROJECT_MUTATION } from "./query";
 import { ProjectCard } from "./ProjectCard";
 
 type Props = {
@@ -25,6 +25,11 @@ export const ProjectList = ({ }: Props) => {
 
     const stopMutation = useMutation({
         mutationFn: async (id: number) => await gqlRequest(STOP_PROJECT_MUTATION, { id }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projects'] }),
+    });
+
+    const restartMutation = useMutation({
+        mutationFn: async (id: number) => await gqlRequest(RESTART_PROJECT_MUTATION, { id }),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projects'] }),
     });
 
@@ -96,6 +101,7 @@ export const ProjectList = ({ }: Props) => {
                         runMutation={runMutation}
                         buildMutation={buildMutation}
                         stopMutation={stopMutation}
+                        restartMutation={restartMutation}
                     />
                 ))}
             </div>

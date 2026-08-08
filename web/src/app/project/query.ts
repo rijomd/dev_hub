@@ -54,6 +54,15 @@ export const STOP_PROJECT_MUTATION = gql`
   }
 `;
 
+export const RESTART_PROJECT_MUTATION = gql`
+  mutation RestartProject($id: Int!) {
+    restartProject(id: $id) {
+      id
+      status
+    }
+  }
+`;
+
 export const subscriptionQuery = `
       subscription OnProjectStatusChanged($id: Int!) {
         projectStatusChanged(id: $id) {
