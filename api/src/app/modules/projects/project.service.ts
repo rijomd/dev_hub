@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, OnModuleInit, OnApplicationShutdown } from '@nestjs/common';
 import { spawn, ChildProcess } from 'child_process';
 import { ProjectsGateway } from './project.gateway';
 import { ProjectsPubSub } from './projects.pubsub';
@@ -6,7 +6,7 @@ import { Project, ProjectStatus } from '../../entities/project.entity';
 import { ProjectsRepository } from './projects.repository';
 
 @Injectable()
-export class ProjectService {
+export class ProjectService implements OnModuleInit, OnApplicationShutdown {
     private readonly logger = new Logger(ProjectService.name);
     // in-memory process map — survives for the server lifetime
     private readonly procs = new Map<number, ChildProcess>();
@@ -18,6 +18,54 @@ export class ProjectService {
         private readonly gateway: ProjectsGateway,
         private readonly pubSub: ProjectsPubSub,
     ) { }
+
+    async onModuleInit() {
+        const count = await this.projectsRepository.resetStaleProjects();
+        if (count > 0) {
+            this.logger.warn(
+                `onModuleInit: reset ${count} stale project(s) to STOPPED (previous session orphans)`,
+            );
+        }
+    }
+
+    /**
+     * Called by NestJS when the process receives SIGTERM / SIGINT
+     * (requires app.enableShutdownHooks() in main.ts).
+     *
+     * Kill every tracked child process so they don't become OS orphans.
+     * The child's 'exit' event fires normally and updates the DB to STOPPED.
+     */
+    async onApplicationShutdown(signal?: string) {
+        this.logger.log(`onApplicationShutdown [${signal}]: killing ${this.procs.size} child process(es)`);
+
+        const killPromises: Promise<void>[] = [];
+
+        for (const [projectId, proc] of this.procs.entries()) {
+            this.stoppingProcs.add(projectId); // ensure exit handler → STOPPED, not ERROR
+            killPromises.push(
+                new Promise<void>((resolve) => {
+                    proc.once('exit', () => resolve());
+
+                    try {
+                        if (process.platform === 'win32') {
+                            // /t kills the whole process tree; /f forces immediately
+                            spawn('taskkill', ['/pid', proc.pid!.toString(), '/t', '/f']);
+                        } else {
+                            proc.kill('SIGKILL');
+                        }
+                    } catch (_) {
+                        resolve(); // already dead — carry on
+                    }
+
+                    // Safety timeout: don't block shutdown longer than 3s per process
+                    setTimeout(resolve, 3000);
+                }),
+            );
+        }
+
+        await Promise.all(killPromises);
+        this.logger.log('onApplicationShutdown: all child processes terminated');
+    }
 
     /** Kill a stale/zombie process for a project without waiting for 'exit' event. */
     private forceKillProc(projectId: number) {

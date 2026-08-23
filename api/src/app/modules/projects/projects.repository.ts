@@ -72,6 +72,28 @@ export class ProjectsRepository {
     await this.projectRepo.update(id, { status });
   }
 
+  /**
+   * Called once on server start-up.
+   * Any project still marked as STARTING / RUNNING / STOPPING / BUILDING
+   * belongs to a previous server session — no child process is alive for them.
+   * Reset them all to STOPPED so the UI and the procs-Map are consistent.
+   */
+  async resetStaleProjects(): Promise<number> {
+    const staleStatuses: ProjectStatus[] = [
+      ProjectStatus.STARTING,
+      ProjectStatus.RUNNING,
+      ProjectStatus.STOPPING,
+      ProjectStatus.BUILDING,
+    ];
+    const result = await this.projectRepo
+      .createQueryBuilder()
+      .update(Project)
+      .set({ status: ProjectStatus.STOPPED })
+      .where('status IN (:...statuses)', { statuses: staleStatuses })
+      .execute();
+    return result.affected ?? 0;
+  }
+
   async createProject(input: CreateProjectInput, userId: number): Promise<Project> {
     const project = this.projectRepo.create({
       ...input,
