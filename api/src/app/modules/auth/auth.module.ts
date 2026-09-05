@@ -25,6 +25,6 @@ import { GqlJwtAuthGuard } from "./gql-jwt-auth.guard";
         }),
     ],
     providers: [AuthService, AuthResolver, GqlJwtAuthGuard, JwtStrategy],
-    exports: [GqlJwtAuthGuard],
+    exports: [GqlJwtAuthGuard, JwtModule],
 })
 export class AuthModule { }

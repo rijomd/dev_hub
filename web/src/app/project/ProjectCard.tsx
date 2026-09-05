@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { useProjectSubscription } from '../utils/useProjectSubscription';
+import { LogsPanel } from './LogsPanel';
 
 export const ProjectCard = ({ project, runMutation, buildMutation, stopMutation, restartMutation }: any) => {
+    const [showLogs, setShowLogs] = useState(false);
     useProjectSubscription(parseInt(project.id));
 
     const id = parseInt(project.id);
@@ -27,6 +30,7 @@ export const ProjectCard = ({ project, runMutation, buildMutation, stopMutation,
         if (action === 'build') buildMutation.mutate(id);
         if (action === 'stop') stopMutation.mutate(id);
         if (action === 'restart') restartMutation.mutate(id);
+        if (action === 'logs') setShowLogs(true);
     };
 
     const actionLabel: Record<string, string> = {
@@ -46,46 +50,56 @@ export const ProjectCard = ({ project, runMutation, buildMutation, stopMutation,
     };
 
     return (
-        <div className={`bg-[#222222] border border-gray-700/50 rounded-xl p-5 ${project.borderColor} border-l-[3px] hover:border-gray-500 transition-colors`}>
-            <div className="flex justify-between items-start mb-1">
-                <h3 className="text-xl font-bold text-gray-100">{project.name}</h3>
-                <span className={`px-2 py-0.5 text-xs font-semibold rounded ${project.tagClass}`}>
-                    {project.type}
-                </span>
+        <>
+            <div className={`bg-[#222222] border border-gray-700/50 rounded-xl p-5 ${project.borderColor} border-l-[3px] hover:border-gray-500 transition-colors`}>
+                <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-xl font-bold text-gray-100">{project.name}</h3>
+                    <span className={`px-2 py-0.5 text-xs font-semibold rounded ${project.tagClass}`}>
+                        {project.type}
+                    </span>
+                </div>
+
+                <div className="text-sm text-gray-400 mb-4">
+                    {project.framework} · port {project.port}
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
+                    <span className={`w-2.5 h-2.5 rounded-full ${status === 'running' ? 'bg-emerald-500 animate-pulse' :
+                        status === 'building' ? 'bg-amber-500  animate-pulse' :
+                            status === 'error' ? 'bg-red-400' :
+                                status === 'starting' ? 'bg-blue-400   animate-pulse' :
+                                    status === 'stopping' ? 'bg-orange-400 animate-pulse' :
+                                        'bg-gray-500'
+                        }`} />
+                    <span className={status === 'running' ? 'text-gray-300' : status === 'error' ? 'text-red-400' : ''}>{status}</span>
+                    <span>·</span>
+                    <span>{project.version}</span>
+                </div>
+
+                <div className="text-[13px] text-gray-500 font-mono mb-5 truncate">
+                    {project.path}
+                </div>
+
+                <div className="flex gap-2 mt-5 flex-wrap">
+                    {getActions().map(action => (
+                        <button
+                            key={action}
+                            onClick={() => handleAction(action)}
+                            className={`px-4 py-1.5 bg-transparent border rounded-xl text-sm transition-colors ${actionClass[action]}`}
+                        >
+                            {actionLabel[action]}
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            <div className="text-sm text-gray-400 mb-4">
-                {project.framework} · port {project.port}
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
-                <span className={`w-2.5 h-2.5 rounded-full ${status === 'running' ? 'bg-emerald-500 animate-pulse' :
-                    status === 'building' ? 'bg-amber-500  animate-pulse' :
-                        status === 'error' ? 'bg-red-400' :
-                            status === 'starting' ? 'bg-blue-400   animate-pulse' :
-                                status === 'stopping' ? 'bg-orange-400 animate-pulse' :
-                                    'bg-gray-500'
-                    }`} />
-                <span className={status === 'running' ? 'text-gray-300' : status === 'error' ? 'text-red-400' : ''}>{status}</span>
-                <span>·</span>
-                <span>{project.version}</span>
-            </div>
-
-            <div className="text-[13px] text-gray-500 font-mono mb-5 truncate">
-                {project.path}
-            </div>
-
-            <div className="flex gap-2 mt-5 flex-wrap">
-                {getActions().map(action => (
-                    <button
-                        key={action}
-                        onClick={() => handleAction(action)}
-                        className={`px-4 py-1.5 bg-transparent border rounded-xl text-sm transition-colors ${actionClass[action]}`}
-                    >
-                        {actionLabel[action]}
-                    </button>
-                ))}
-            </div>
-        </div>
+            {showLogs && (
+                <LogsPanel
+                    projectId={id}
+                    projectName={project.name}
+                    onClose={() => setShowLogs(false)}
+                />
+            )}
+        </>
     );
 };
