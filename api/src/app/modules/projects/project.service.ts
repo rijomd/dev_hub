@@ -163,6 +163,7 @@ export class ProjectService implements OnModuleInit, OnApplicationShutdown {
         if (project.status === ProjectStatus.ERROR) {
             this.logger.log(`Project #${projectId} is in ERROR state — forcing reset to STOPPED`);
             this.forceKillProc(projectId);
+            this.gateway.clearHistory(projectId.toString());
             await this.updateStatus(project, ProjectStatus.STOPPED);
             return project;
         }
@@ -171,6 +172,7 @@ export class ProjectService implements OnModuleInit, OnApplicationShutdown {
         if (proc) {
             // Mark as intentionally stopping so the exit handler resolves to STOPPED
             this.stoppingProcs.add(projectId);
+            this.gateway.clearHistory(projectId.toString());
             await this.updateStatus(project, ProjectStatus.STOPPING);
             try {
                 if (process.platform === 'win32') {
@@ -189,6 +191,7 @@ export class ProjectService implements OnModuleInit, OnApplicationShutdown {
             }
         } else {
             // Also ensure it is marked as stopped if no process is found
+            this.gateway.clearHistory(projectId.toString());
             await this.updateStatus(project, ProjectStatus.STOPPED);
         }
 
@@ -199,6 +202,8 @@ export class ProjectService implements OnModuleInit, OnApplicationShutdown {
         const project = await this.projectsRepository.getProjectByIdorFail(projectId);
         // Kill whatever is running (or stale from an error)
         this.forceKillProc(projectId);
+        // Clear old logs so the panel shows only the fresh run's output
+        this.gateway.clearHistory(projectId.toString());
         // Reset to STOPPED so run() can proceed cleanly
         await this.updateStatus(project, ProjectStatus.STOPPED);
         // Delegate to run() for a fresh start
