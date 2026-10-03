@@ -1,7 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, type Relation } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, ManyToMany, JoinTable, type Relation } from 'typeorm';
 import { User } from './user.entity';
 import { ProjectLog } from './project-log.entity';
 import { ProjectError } from './project-error.entity';
+import { GitRepository } from './git-repository.entity';
+import { Notification } from './notification.entity';
 import { registerEnumType } from '@nestjs/graphql';
 
 
@@ -71,6 +73,21 @@ export class Project {
 
   @OneToMany(() => ProjectError, (error) => error.project)
   errors!: Relation<ProjectError>[];
+
+  /**
+   * Project members who will receive git-event notifications.
+   * Stored in the `project_members` join table.
+   * The owner (user) may also be added here to be treated as a member.
+   */
+  @ManyToMany(() => User, (user) => user.memberProjects, { cascade: true })
+  @JoinTable({ name: 'project_members' })
+  members!: Relation<User>[];
+
+  @OneToMany(() => GitRepository, (repo) => repo.project)
+  gitRepositories!: Relation<GitRepository>[];
+
+  @OneToMany(() => Notification, (n) => n.project)
+  notifications!: Relation<Notification>[];
 
   @CreateDateColumn()
   createdAt!: Date;

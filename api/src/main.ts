@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   app.enableCors();
   app.enableShutdownHooks(); // fires OnApplicationShutdown on SIGTERM / SIGINT
   const port = process.env.PORT || 8000;

@@ -8,6 +8,7 @@ import { Request } from 'express';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { UserModule } from './modules/user/user.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 import { AppService } from './app.service';
 
@@ -42,6 +43,7 @@ import { AppService } from './app.service';
     AuthModule,
     ProjectsModule,
     UserModule,
+    NotificationsModule,
   ],
   providers: [AppService],
 })
