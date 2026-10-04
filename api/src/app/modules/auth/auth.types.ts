@@ -10,6 +10,9 @@ export class AuthResponse {
 
   @Field()
   email!: string;
+
+  @Field()
+  userType!: string;
 }
 
 @InputType()
@@ -22,6 +25,9 @@ export class RegisterInput {
 
   @Field()
   name!: string;
+
+  @Field({ nullable: true })
+  userType?: string;
 }
 
 @InputType()
