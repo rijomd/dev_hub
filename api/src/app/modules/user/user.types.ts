@@ -23,6 +23,9 @@ export class UserObject {
   @Field({ nullable: true })
   providerOrgId?: string;
 
+  @Field(() => Int, { nullable: true })
+  createdBy?: number;
+
   @Field()
   createdAt!: Date;
 }
@@ -49,4 +52,22 @@ export class CreateDeveloperInput {
 export class UpdateDeveloperInput extends PartialType(CreateDeveloperInput) {
   @Field(() => Int)
   id!: number;
+}
+
+@ObjectType()
+export class JoinRequestObject {
+  @Field(() => Int)
+  id!: number;
+
+  @Field(() => Int)
+  developerId!: number;
+
+  @Field(() => Int)
+  organizationId!: number;
+
+  @Field()
+  status!: string;
+
+  @Field(() => UserObject)
+  developer!: UserObject;
 }

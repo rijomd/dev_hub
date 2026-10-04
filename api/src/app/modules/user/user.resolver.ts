@@ -2,7 +2,7 @@ import { UseGuards, UnauthorizedException } from "@nestjs/common";
 import { Query, Resolver, Context, Mutation, Args, Int } from "@nestjs/graphql";
 
 import { GqlJwtAuthGuard } from "../auth/gql-jwt-auth.guard";
-import { UserObject, CreateDeveloperInput, UpdateDeveloperInput } from "./user.types";
+import { UserObject, CreateDeveloperInput, UpdateDeveloperInput, JoinRequestObject } from "./user.types";
 import { UserRepository } from "./user.repository";
 import * as bcrypt from 'bcrypt';
 
@@ -14,6 +14,16 @@ export class UserResolver {
     @Query(() => UserObject, { description: "get user detail" })
     async userProfile(@Context() context: any): Promise<UserObject> {
         return context.req.user;
+    }
+
+    @UseGuards(GqlJwtAuthGuard)
+    @Query(() => [UserObject], { description: "List all organizations for developer to join" })
+    async listOrganizations(@Context() context: any): Promise<UserObject[]> {
+        const user = context.req.user;
+        if (user.userType !== 'dev') {
+            throw new UnauthorizedException('Only developers can list organizations');
+        }
+        return this.userRepository.findAll() as unknown as UserObject[];
     }
 
     @UseGuards(GqlJwtAuthGuard)
@@ -81,5 +91,55 @@ export class UserResolver {
         }
 
         return this.userRepository.removeDeveloperFromOrg(id, user.id);
+    }
+
+    @UseGuards(GqlJwtAuthGuard)
+    @Mutation(() => Boolean, { description: "Request to join an organization" })
+    async requestJoinOrganization(
+        @Args('orgId', { type: () => Int }) orgId: number,
+        @Context() context: any
+    ): Promise<boolean> {
+        const user = context.req.user;
+        if (user.userType !== 'dev' || user.createdBy != null) {
+            throw new UnauthorizedException('Only independent developers can request to join organizations');
+        }
+        await this.userRepository.requestJoinOrganization(user.id, orgId);
+        return true;
+    }
+
+    @UseGuards(GqlJwtAuthGuard)
+    @Query(() => [JoinRequestObject], { description: "List pending join requests for an organization" })
+    async listPendingRequests(@Context() context: any): Promise<JoinRequestObject[]> {
+        const user = context.req.user;
+        if (user.userType !== 'organization') {
+            throw new UnauthorizedException('Only organizations can view pending requests');
+        }
+        return this.userRepository.listPendingRequests(user.id) as unknown as JoinRequestObject[];
+    }
+
+    @UseGuards(GqlJwtAuthGuard)
+    @Mutation(() => Boolean, { description: "Approve a join request" })
+    async approveJoinRequest(
+        @Args('requestId', { type: () => Int }) requestId: number,
+        @Context() context: any
+    ): Promise<boolean> {
+        const user = context.req.user;
+        if (user.userType !== 'organization') {
+            throw new UnauthorizedException('Only organizations can approve requests');
+        }
+        return this.userRepository.approveJoinRequest(requestId, user.id);
+    }
+
+    @UseGuards(GqlJwtAuthGuard)
+    @Mutation(() => Boolean, { description: "Reject a join request" })
+    async rejectJoinRequest(
+        @Args('requestId', { type: () => Int }) requestId: number,
+        @Context() context: any
+    ): Promise<boolean> {
+        const user = context.req.user;
+        if (user.userType !== 'organization') {
+            throw new UnauthorizedException('Only organizations can reject requests');
+        }
+        return this.userRepository.rejectJoinRequest(requestId, user.id);
     }
 }

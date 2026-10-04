@@ -1,10 +1,10 @@
 import { USER_NAME } from '../utils/authConstants';
 import { useLogout } from '../utils/hooks';
-import { Tabs } from './Tabs';
+import { Tabs, TabKey } from './Tabs';
 
 type HeaderProps = {
-    activeTab: 'active' | 'add' | 'console';
-    setActiveTab: (tab: 'active' | 'add' | 'console') => void;
+    activeTab: TabKey;
+    setActiveTab: (tab: TabKey) => void;
 };
 
 export const Header = ({ activeTab, setActiveTab }: HeaderProps) => {

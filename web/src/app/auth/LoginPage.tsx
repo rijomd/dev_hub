@@ -4,7 +4,7 @@ import { useNavigate } from '@tanstack/react-router';
 
 import { client } from '../utils/gql-client';
 import { InputBox, Button } from '@dev-hub/ui';
-import { ACCESS_TOKEN, USER_NAME } from '../utils/authConstants';
+import { ACCESS_TOKEN, USER_NAME, USER_TYPE, CREATED_BY } from '../utils/authConstants';
 import { LOGIN_MUTATION } from './query';
 import { LoginResponse } from './types';
 
@@ -21,6 +21,8 @@ export function LoginPage() {
     onSuccess: (data) => {
       localStorage.setItem(ACCESS_TOKEN, data.login.access_token);
       localStorage.setItem(USER_NAME, data.login.name);
+      localStorage.setItem(USER_TYPE, data.login.userType);
+      localStorage.setItem(CREATED_BY, data.login.createdBy != null ? String(data.login.createdBy) : '');
       navigate({ to: '/' });
     },
     onError: (err: any) => {

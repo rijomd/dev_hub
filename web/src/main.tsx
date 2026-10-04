@@ -1,4 +1,4 @@
-import { StrictMode, lazy, Suspense } from 'react';
+import React, { StrictMode, lazy, Suspense } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
 import { createRouter, createRoute, createRootRoute, RouterProvider, Outlet } from '@tanstack/react-router';
@@ -73,7 +73,21 @@ const loginRoute = createRoute({
   },
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, loginRoute]);
+const devsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/devs',
+  component: () => (
+    <Suspense fallback={<LoadingFallback />}>
+      {/* We dynamically import the new page */}
+      {React.createElement(lazy(() => import('./app/devs/OrganizationDevs').then(m => ({ default: m.OrganizationDevs }))))}
+    </Suspense>
+  ),
+  beforeLoad: () => {
+    requireAuth();
+  },
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, loginRoute, devsRoute]);
 
 const router = createRouter({ routeTree });
 

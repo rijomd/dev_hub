@@ -19,6 +19,9 @@ export class User {
   @Column({ name: 'user_type', default: 'dev' })
   userType!: string;
 
+  @Column({ name: 'created_by', nullable: true })
+  createdBy!: number;
+
   @Column({ nullable: true })
   provider!: string;
 

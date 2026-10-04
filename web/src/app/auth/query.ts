@@ -6,6 +6,8 @@ export const LOGIN_MUTATION = gql`
       access_token
       name
       email
+      userType
+      createdBy
     }
   }
 `;

@@ -1,4 +1,4 @@
-import { ObjectType, Field, InputType } from '@nestjs/graphql';
+import { ObjectType, Field, Int, InputType } from '@nestjs/graphql';
 
 @ObjectType()
 export class AuthResponse {
@@ -13,6 +13,9 @@ export class AuthResponse {
 
   @Field()
   userType!: string;
+
+  @Field(() => Int, { nullable: true })
+  createdBy?: number;
 }
 
 @InputType()
